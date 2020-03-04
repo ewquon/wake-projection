@@ -123,7 +123,7 @@ MyTest::readParameters ()
     ParmParse pp;
     pp.query("max_level", max_level);
     pp.query("ref_ratio", ref_ratio);
-    pp.query("n_cell", n_cell);
+//    pp.query("n_cell", n_cell);
     pp.query("max_grid_size", max_grid_size);
 
     pp.query("composite_solve", composite_solve);
@@ -165,7 +165,6 @@ MyTest::initData ()
 
     solution.resize(nlevels);
     rhs.resize(nlevels);
-    exact_solution.resize(nlevels);
 
     // Calculate bounds (EWQ)
     x0 = xmin;
@@ -252,7 +251,6 @@ MyTest::initData ()
         //                          a            b           c  d
         solution      [ilev].define(grids[ilev], dmap[ilev], 1, 1);
         rhs           [ilev].define(grids[ilev], dmap[ilev], 1, 0);
-        exact_solution[ilev].define(grids[ilev], dmap[ilev], 1, 0);
     }
 
     initProbPoisson();

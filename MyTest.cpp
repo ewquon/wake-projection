@@ -232,15 +232,14 @@ MyTest::initData ()
         domain.refine(ref_ratio);
     }
 
-//    domain = domain0;
-//    for (int ilev = 0; ilev < nlevels; ++ilev)
-//    {
-//        grids[ilev].define(domain);
-//        grids[ilev].maxSize(max_grid_size);
-//        amrex::Print() << "lvl " << ilev << " : " << geom[ilev] << "\n";
+    domain = domain0;
+    for (int ilev = 0; ilev < nlevels; ++ilev)
+    {
+        grids[ilev].define(domain);
+        grids[ilev].maxSize(max_grid_size);
 //        domain.grow(-n_cell/4);   // fine level cover the middle of the coarse domain
-//        domain.refine(ref_ratio); 
-//    }
+        domain.refine(ref_ratio); 
+    }
 
     for (int ilev = 0; ilev < nlevels; ++ilev)
     {

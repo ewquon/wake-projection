@@ -17,43 +17,25 @@ MyTest::writePlotfile () const
     const int nlevels = max_level+1;
     Vector<MultiFab> plotmf(nlevels);
 
-    if (gpu_regtest) {
-        const int ncomp = 3;
-        Vector<std::string> varname = {"solution", "rhs", "exact_solution"};
+    const int ncomp = 2;
+    Vector<std::string> varname = {"solution", "rhs"};
 
-        for (int ilev = 0; ilev < nlevels; ++ilev)
-        {
-            plotmf[ilev].define(grids[ilev], dmap[ilev], ncomp, 0);
-            MultiFab::Copy(plotmf[ilev], solution      [ilev], 0, 0, 1, 0);
-            MultiFab::Copy(plotmf[ilev], rhs           [ilev], 0, 1, 1, 0);
-            MultiFab::Copy(plotmf[ilev], exact_solution[ilev], 0, 2, 1, 0);
-        }
-
-        WriteMultiLevelPlotfile("plot", nlevels, amrex::GetVecOfConstPtrs(plotmf),
-                                varname, geom, 0.0, Vector<int>(nlevels, 0),
-                                Vector<IntVect>(nlevels, IntVect{ref_ratio}));
-    } else {
-        const int ncomp = 4;
-        Vector<std::string> varname = {"solution", "rhs", "exact_solution", "error"};
-
-        for (int ilev = 0; ilev < nlevels; ++ilev)
-        {
-            plotmf[ilev].define(grids[ilev], dmap[ilev], ncomp, 0);
-            MultiFab::Copy(plotmf[ilev], solution      [ilev], 0, 0, 1, 0);
-            MultiFab::Copy(plotmf[ilev], rhs           [ilev], 0, 1, 1, 0);
-            MultiFab::Copy(plotmf[ilev], exact_solution[ilev], 0, 2, 1, 0);
-            MultiFab::Copy(plotmf[ilev], solution      [ilev], 0, 3, 1, 0);
-            MultiFab::Subtract(plotmf[ilev], plotmf[ilev], 2, 3, 1, 0); // error = soln - exact
-            auto dx = geom[ilev].CellSize();
-            Real dvol = AMREX_D_TERM(dx[0],*dx[1],*dx[2]);
-            amrex::Print() << "Level " << ilev
-                           << " max-norm error: " << plotmf[ilev].norminf(3)
-                           << " 1-norm error: " << plotmf[ilev].norm1(3)*dvol << std::endl;
-        }
-
-        WriteMultiLevelPlotfile("plot", nlevels, amrex::GetVecOfConstPtrs(plotmf),
-                                varname, geom, 0.0, Vector<int>(nlevels, 0),
-                                Vector<IntVect>(nlevels, IntVect{ref_ratio}));
+    for (int ilev = 0; ilev < nlevels; ++ilev)
+    {
+        plotmf[ilev].define(grids[ilev], dmap[ilev], ncomp, 0);
+        MultiFab::Copy(plotmf[ilev], solution      [ilev], 0, 0, 1, 0);
+        MultiFab::Copy(plotmf[ilev], rhs           [ilev], 0, 1, 1, 0);
+//        MultiFab::Copy(plotmf[ilev], exact_solution[ilev], 0, 2, 1, 0);
+//        MultiFab::Copy(plotmf[ilev], solution      [ilev], 0, 3, 1, 0);
+//        MultiFab::Subtract(plotmf[ilev], plotmf[ilev], 2, 3, 1, 0); // error = soln - exact
+//        auto dx = geom[ilev].CellSize();
+//        Real dvol = AMREX_D_TERM(dx[0],*dx[1],*dx[2]);
+//        amrex::Print() << "Level " << ilev
+//                       << " max-norm error: " << plotmf[ilev].norminf(3)
+//                       << " 1-norm error: " << plotmf[ilev].norm1(3)*dvol << std::endl;
     }
+    WriteMultiLevelPlotfile("plot", nlevels, amrex::GetVecOfConstPtrs(plotmf),
+                            varname, geom, 0.0, Vector<int>(nlevels, 0),
+                            Vector<IntVect>(nlevels, IntVect{ref_ratio}));
 }
 

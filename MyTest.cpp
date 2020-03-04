@@ -167,14 +167,14 @@ MyTest::initData ()
     rhs.resize(nlevels);
     exact_solution.resize(nlevels);
 
-    // Calculate extents (EWQ)
+    // Calculate bounds (EWQ)
     x0 = xmin;
     x1 = xmax;
     y0 = -1 - buffer;
     y1 =  1 + buffer;
     if (ground_effect)
     {
-        z0 = spacing;
+        z0 = 0;
         z1 = zhub + 1 + buffer;
     }
     else
@@ -183,6 +183,29 @@ MyTest::initData ()
         z1 = zhub + 1 + buffer;
     }
     amrex::Print() << "Target bounds: "
+        << "(" << x0 << ", " << y0 << ", " << z0 << ") "
+        << "(" << x1 << ", " << y1 << ", " << z1 << ") "
+        << "\n";
+
+    // Calculate number of cells (EWQ)
+    int nxmin,nymin,nzmin;
+    int nxmax,nymax,nzmax;
+    amrex::Real maxspacing = spacing * std::pow(2, max_level);
+    nxmin = std::copysign(std::ceil(std::abs(x0) / maxspacing), x0);
+    nxmax = std::copysign(std::ceil(std::abs(x1) / maxspacing), x1);
+    nymin = std::copysign(std::ceil(std::abs(y0) / maxspacing), y0);
+    nymax = std::copysign(std::ceil(std::abs(y1) / maxspacing), y1);
+    nzmin = std::copysign(std::ceil(std::abs(z0) / maxspacing), z0);
+    nzmax = std::copysign(std::ceil(std::abs(z1) / maxspacing), z1);
+
+    // Calculate actual bounds (EWQ)
+    x0 = nxmin * maxspacing;
+    y0 = nymin * maxspacing;
+    z0 = nzmin * maxspacing;
+    x1 = nxmax * maxspacing;
+    y1 = nymax * maxspacing;
+    z1 = nzmax * maxspacing;
+    amrex::Print() << "Actual bounds (max spacing=" << maxspacing << "): "
         << "(" << x0 << ", " << y0 << ", " << z0 << ") "
         << "(" << x1 << ", " << y1 << ", " << z1 << ") "
         << "\n";

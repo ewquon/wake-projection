@@ -246,7 +246,7 @@ MyTest::initData ()
         dmap[ilev].define(grids[ilev]);
         // a: const BoxArray & bxs
         // b: const DistributionMapping & dm
-        // c: int nvar (# components)
+        // c: int ncomp (# components)
         // d: int ngrow (# ghost cells)
         //                          a            b           c  d
         solution      [ilev].define(grids[ilev], dmap[ilev], 1, 1);

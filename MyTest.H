@@ -39,6 +39,7 @@ private:
     amrex::Real spacing = 0.1;
     amrex::Real zhub = 1.5;
     bool ground_effect = false;
+    std::string rhs_prefix = "level"; 
     
     bool composite_solve = true;
 

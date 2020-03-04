@@ -216,6 +216,7 @@ MyTest::initData ()
     Geometry::Setup(&rb, 0, is_periodic.data());
 //    Box domain0(IntVect{AMREX_D_DECL(0,0,0)}, IntVect{AMREX_D_DECL(n_cell-1,n_cell-1,n_cell-1)});
     // EWQ:
+    // is it a bad idea to use negative indices?
     Box domain0
     (
         IntVect{AMREX_D_DECL(nxmin,nymin,nzmin)},

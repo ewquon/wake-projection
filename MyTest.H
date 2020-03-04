@@ -26,7 +26,7 @@ private:
     void readParameters ();
     void initData ();
 
-    int max_level = 1;
+    int max_level = 2;
     int ref_ratio = 2;
     int n_cell = 128;
     int max_grid_size = 64;

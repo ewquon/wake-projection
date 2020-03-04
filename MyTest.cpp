@@ -190,49 +190,66 @@ MyTest::initData ()
     // Calculate number of cells (EWQ)
     int nxmin,nymin,nzmin;
     int nxmax,nymax,nzmax;
-    amrex::Real maxspacing = spacing * std::pow(2, max_level);
-    nxmin = std::copysign(std::ceil(std::abs(x0) / maxspacing), x0);
-    nxmax = std::copysign(std::ceil(std::abs(x1) / maxspacing), x1);
-    nymin = std::copysign(std::ceil(std::abs(y0) / maxspacing), y0);
-    nymax = std::copysign(std::ceil(std::abs(y1) / maxspacing), y1);
-    nzmin = std::copysign(std::ceil(std::abs(z0) / maxspacing), z0);
-    nzmax = std::copysign(std::ceil(std::abs(z1) / maxspacing), z1);
+    amrex::Real spacing0 = spacing * std::pow(2, max_level);
+    nxmin = std::copysign(std::ceil(std::abs(x0) / spacing0), x0);
+    nxmax = std::copysign(std::ceil(std::abs(x1) / spacing0), x1);
+    nymin = std::copysign(std::ceil(std::abs(y0) / spacing0), y0);
+    nymax = std::copysign(std::ceil(std::abs(y1) / spacing0), y1);
+    nzmin = std::copysign(std::ceil(std::abs(z0) / spacing0), z0);
+    nzmax = std::copysign(std::ceil(std::abs(z1) / spacing0), z1);
 
     // Calculate actual bounds (EWQ)
-    x0 = nxmin * maxspacing;
-    y0 = nymin * maxspacing;
-    z0 = nzmin * maxspacing;
-    x1 = nxmax * maxspacing;
-    y1 = nymax * maxspacing;
-    z1 = nzmax * maxspacing;
-    amrex::Print() << "Actual bounds (max spacing=" << maxspacing << "): "
+    x0 = nxmin * spacing0;
+    y0 = nymin * spacing0;
+    z0 = nzmin * spacing0;
+    x1 = nxmax * spacing0;
+    y1 = nymax * spacing0;
+    z1 = nzmax * spacing0;
+    amrex::Print() << "Actual bounds (init spacing=" << spacing0 << "): "
         << "(" << x0 << ", " << y0 << ", " << z0 << ") "
         << "(" << x1 << ", " << y1 << ", " << z1 << ") "
         << "\n";
 
-    RealBox rb({AMREX_D_DECL(0.,0.,0.)}, {AMREX_D_DECL(1.,1.,1.)});
+//    RealBox rb({AMREX_D_DECL(0.,0.,0.)}, {AMREX_D_DECL(1.,1.,1.)});
+    RealBox rb({AMREX_D_DECL(x0,y0,z0)}, {AMREX_D_DECL(x1,y1,z1)}); // EWQ
     Array<int,AMREX_SPACEDIM> is_periodic{AMREX_D_DECL(0,0,0)};
     Geometry::Setup(&rb, 0, is_periodic.data());
-    Box domain0(IntVect{AMREX_D_DECL(0,0,0)}, IntVect{AMREX_D_DECL(n_cell-1,n_cell-1,n_cell-1)});
+//    Box domain0(IntVect{AMREX_D_DECL(0,0,0)}, IntVect{AMREX_D_DECL(n_cell-1,n_cell-1,n_cell-1)});
+    // EWQ:
+    Box domain0
+    (
+        IntVect{AMREX_D_DECL(nxmin,nymin,nzmin)},
+        IntVect{AMREX_D_DECL(nxmax-1,nymax-1,nzmax-1)}
+        // cell-centered, by default
+    );
+    amrex::Print() << "domain0 : " << domain0 << "\n"; // domain0 : ((0,0,0) (127,127,127) (0,0,0))
+
     Box domain = domain0;
     for (int ilev = 0; ilev < nlevels; ++ilev)
     {
         geom[ilev].define(domain);
+        amrex::Print() << "lvl " << ilev << " : " << geom[ilev] << "\n";
         domain.refine(ref_ratio);
     }
 
-    domain = domain0;
-    for (int ilev = 0; ilev < nlevels; ++ilev)
-    {
-        grids[ilev].define(domain);
-        grids[ilev].maxSize(max_grid_size);
-        domain.grow(-n_cell/4);   // fine level cover the middle of the coarse domain
-        domain.refine(ref_ratio); 
-    }
+//    domain = domain0;
+//    for (int ilev = 0; ilev < nlevels; ++ilev)
+//    {
+//        grids[ilev].define(domain);
+//        grids[ilev].maxSize(max_grid_size);
+//        amrex::Print() << "lvl " << ilev << " : " << geom[ilev] << "\n";
+//        domain.grow(-n_cell/4);   // fine level cover the middle of the coarse domain
+//        domain.refine(ref_ratio); 
+//    }
 
     for (int ilev = 0; ilev < nlevels; ++ilev)
     {
         dmap[ilev].define(grids[ilev]);
+        // a: const BoxArray & bxs
+        // b: const DistributionMapping & dm
+        // c: int nvar (# components)
+        // d: int ngrow (# ghost cells)
+        //                          a            b           c  d
         solution      [ilev].define(grids[ilev], dmap[ilev], 1, 1);
         rhs           [ilev].define(grids[ilev], dmap[ilev], 1, 0);
         exact_solution[ilev].define(grids[ilev], dmap[ilev], 1, 0);

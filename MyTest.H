@@ -26,8 +26,13 @@ private:
     void readParameters ();
     void initData ();
 
+    // DEBUG:
+    int max_level = 0;
+    amrex::Real spacing = 0.4; // spacing at max_level, i.e., highest resolution (EWQ)
+
 //    int max_level = 2;
-    int max_level = 0; // DEBUG
+//    amrex::Real spacing = 0.1; // spacing at max_level, i.e., highest resolution (EWQ)
+
     int ref_ratio = 2;
     int max_grid_size = 64;
     
@@ -36,8 +41,6 @@ private:
     amrex::Real xmin = -10.0; // target streamwise extent, in rotor radii R
     amrex::Real xmax =  10.0; // target streamwise extent, in rotor radii R
     amrex::Real buffer = 10.0; // target lateral/vertical extent from rotor edge, in rotor radii R
-//    amrex::Real spacing = 0.1;
-    amrex::Real spacing = 0.4; // DEBUG
     amrex::Real zhub = 1.5;
     bool ground_effect = false;
     std::string rhs_prefix = "level"; 

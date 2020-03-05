@@ -122,9 +122,16 @@ MyTest::readParameters ()
 {
     ParmParse pp;
     pp.query("max_level", max_level);
+    pp.query("spacing", spacing);
     pp.query("ref_ratio", ref_ratio);
-//    pp.query("n_cell", n_cell);
     pp.query("max_grid_size", max_grid_size);
+
+    pp.query("xmin", xmin);
+    pp.query("xmax", xmax);
+    pp.query("buffer", buffer);
+    pp.query("zhub", zhub);
+    pp.query("ground_effect", ground_effect);
+    pp.query("rhs_prefix", rhs_prefix);
 
     pp.query("composite_solve", composite_solve);
 

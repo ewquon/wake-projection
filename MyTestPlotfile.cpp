@@ -8,11 +8,11 @@ using namespace amrex;
 void
 MyTest::writePlotfile () const
 {
-    ParmParse pp;
-    bool gpu_regtest = false;
-#ifdef AMREX_USE_GPU
-    pp.query("gpu_regtest", gpu_regtest);
-#endif
+//    ParmParse pp;
+//    bool gpu_regtest = false;
+//#ifdef AMREX_USE_GPU
+//    pp.query("gpu_regtest", gpu_regtest);
+//#endif
 
     const int nlevels = max_level+1;
     Vector<MultiFab> plotmf(nlevels);

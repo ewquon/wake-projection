@@ -9,25 +9,29 @@ MyTest::initProbPoisson ()
 {
     for (int ilev = 0; ilev <= max_level; ++ilev)
     {
-        // DEBUG
-        const auto prob_lo = geom[ilev].ProbLoArray();
-        const auto dx      = geom[ilev].CellSizeArray();
-        amrex::Print() << "init lvl " << ilev << " : "
-                       << "small end at " << prob_lo[0] << " " << prob_lo[1] << " " << prob_lo[2] << " "
-                       << "spacings = " << dx[0] << " " << dx[1] << " " << dx[2] << "\n";
-
 #ifdef _OPENMP
 #pragma omp parallel if (Gpu::notInLaunchRegion())
 #endif
 
-        const amrex::IntVect smallEnd = geom[ilev].Domain().smallEnd();
-        const amrex::IntVect bigEnd = geom[ilev].Domain().bigEnd();
-        int Nx = bigEnd[0] - smallEnd[0] + 1;
-        int Ny = bigEnd[1] - smallEnd[1] + 1;
-        int Nz = bigEnd[2] - smallEnd[2] + 1;
-        amrex::Print() << Nx << " " << Ny << " " << Nz << "\n";
-        int N = Nx*Ny*Nz;
+        // get number of cells in current level
+        const amrex::IntVect lower = geom[ilev].Domain().smallEnd();
+        const amrex::IntVect upper = geom[ilev].Domain().bigEnd();
+        const int Nx = upper[0] - lower[0] + 1;
+        const int Ny = upper[1] - lower[1] + 1;
+        const int Nz = upper[2] - lower[2] + 1;
+        const int N = Nx*Ny*Nz;
 
+        // DEBUG
+        {
+            const auto prob_lo = geom[ilev].ProbLoArray();
+            const auto dx      = geom[ilev].CellSizeArray();
+            amrex::Print() << "init lvl " << ilev << " : "
+                           << "lower bound = " << prob_lo[0] << " " << prob_lo[1] << " " << prob_lo[2] << ", "
+                           << "spacings = " << dx[0] << " " << dx[1] << " " << dx[2] << ", "
+                           << "N = " << Nx << " " << Ny << " " << Nz << "\n";
+        }
+
+        // read all RHS values
         std::string fpath = rhs_prefix + std::to_string(ilev) + std::string(".rhs");
         amrex::Print() << "reading " << fpath << "\n";
         std::ifstream f(fpath, std::ios::binary | std::ios::in);
@@ -36,56 +40,39 @@ MyTest::initProbPoisson ()
         f.close();
 
         // DEBUG
-        double divmin=99999, divmax=-99999;
-        for (int i=0; i < N; ++i)
         {
-            if (rhsvec[i] > divmax) divmax = rhsvec[i];
-            if (rhsvec[i] < divmin) divmin = rhsvec[i];
+            double divmin=9e9, divmax=-9e9;
+            for (int i=0; i < N; ++i)
+            {
+                if (rhsvec[i] > divmax) divmax = rhsvec[i];
+                if (rhsvec[i] < divmin) divmin = rhsvec[i];
+            }
+            amrex::Print() << "RHS : [ " << divmin << " ... " << divmax << "]\n";
         }
-        amrex::Print() << "RHS : [ " << divmin << " ... " << divmax << "]\n";
 
+        // Set all cell centers (i,j,k)
         for (MFIter mfi(rhs[ilev], TilingIfNotGPU()); mfi.isValid(); ++mfi)
         {
+            // Get current box chunk
             const Box& bx = mfi.tilebox();
             auto rhsfab = rhs[ilev].array(mfi);
-//            auto exactfab = exact_solution[ilev].array(mfi);
-//            amrex::ParallelFor(bx,
-//            [=] AMREX_GPU_DEVICE (int i, int j, int k) noexcept
-//            {
-//                actual_init_poisson(i,j,k,rhsfab,exactfab,prob_lo,dx);
-//            });
+            amrex::Dim3 lo = lbound(bx);
+            amrex::Dim3 hi = ubound(bx);
 
-            const auto lo = lbound(bx);
-            const auto hi = ubound(bx);
-            // DEBUG:
-            if (ilev == 0)
+            for (int k = lo.z; k <= hi.z; ++k)
             {
-                amrex::Print() << "lo " << lo.x << " " << lo.y << " " << lo.z << "\n";
-                amrex::Print() << "hi " << hi.x << " " << hi.y << " " << hi.z << "\n";
-            }
-            
-            int idx0;
-            for (int k = lo.z; k <= hi.z; ++k) {
-                for (int j = lo.y; j <= hi.y; ++j) {
-                    idx0 = (k-smallEnd[2])*(Nx*Ny) + (j-smallEnd[1])*Nx;
-                    for (int i = lo.x; i <= hi.x; ++i) {
-                        // DEBUG:
-                        amrex::Real x = dx[0] * (i + 0.5);
-                        amrex::Real y = dx[1] * (j + 0.5);
-                        amrex::Real z = dx[2] * (k + 0.5);
-                        if (std::abs(rhsvec[idx0+i-smallEnd[0]]) > 0.1)
-                        {
-                            amrex::Print() << "RHS at " << x << ", " << y << ", " << z << " "
-                                << "(" << i << ", " << j << ", " << k << ")"
-                                << " = " << rhsvec[idx0+i-smallEnd[0]] << "\n";
-                        }
-                        rhsfab(i,j,k) = rhsvec[idx0+i-smallEnd[0]];
+                for (int j = lo.y; j <= hi.y; ++j)
+                {
+                    for (int i = lo.x; i <= hi.x; ++i)
+                    {
+                        rhsfab(i,j,k) = 
+                            rhsvec[(k-lower[2])*(Nx*Ny) + (j-lower[1])*Nx + i-lower[0]];
                     }
                 }
             }
-
         }
 
         solution[ilev].setVal(0.0);
     }
 }
+

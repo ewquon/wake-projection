@@ -194,41 +194,46 @@ MyTest::initData ()
         << "\n";
 
     // Calculate number of cells (EWQ)
-    int nxmin,nymin,nzmin;
-    int nxmax,nymax,nzmax;
+    // - ensure multiple of max_grid_size
     amrex::Real spacing0 = spacing * std::pow(2, max_level);
-    nxmin = std::copysign(std::ceil(std::abs(x0) / spacing0), x0);
-    nxmax = std::copysign(std::ceil(std::abs(x1) / spacing0), x1);
-    nymin = std::copysign(std::ceil(std::abs(y0) / spacing0), y0);
-    nymax = std::copysign(std::ceil(std::abs(y1) / spacing0), y1);
-    nzmin = std::copysign(std::ceil(std::abs(z0) / spacing0), z0);
-    nzmax = std::copysign(std::ceil(std::abs(z1) / spacing0), z1);
+    int nxtot = std::ceil((x1-x0) / spacing0);
+    int nytot = std::ceil((y1-y0) / spacing0);
+    int nztot = std::ceil((z1-z0) / spacing0);
+    amrex::Print() << "- adjusted grid size (for max spacing=" << spacing0 << "): " << nxtot << " " << nytot << " " << nztot << "\n";
+    int nxdiff = std::ceil((float)nxtot / max_grid_size) * max_grid_size - nxtot; // extra cells needed?
+    int nydiff = std::ceil((float)nytot / max_grid_size) * max_grid_size - nytot;
+    int nzdiff = std::ceil((float)nztot / max_grid_size) * max_grid_size - nztot;
+    amrex::Print() << "- grid expansion (max_grid_size=" << max_grid_size << "): " << nxdiff << " " << nydiff << " " << nzdiff << "\n";
 
     // Calculate actual bounds (EWQ)
-    x0 = nxmin * spacing0;
-    y0 = nymin * spacing0;
-    z0 = nzmin * spacing0;
-    x1 = nxmax * spacing0;
-    y1 = nymax * spacing0;
-    z1 = nzmax * spacing0;
+    x0 -= nxdiff/2 * spacing0;
+    x1 += nxdiff/2 * spacing0;
+    y0 -= nydiff/2 * spacing0;
+    y1 += nydiff/2 * spacing0;
+    if (ground_effect)
+    {
+        z1 += nzdiff * spacing0;
+    }
+    else
+    {
+        z0 -= nzdiff/2 * spacing0;
+        z1 += nzdiff/2 * spacing0;
+    }
     amrex::Print() << "Actual bounds (init spacing=" << spacing0 << "): "
         << "(" << x0 << ", " << y0 << ", " << z0 << ") "
         << "(" << x1 << ", " << y1 << ", " << z1 << ") "
         << "\n";
 
-//    RealBox rb({AMREX_D_DECL(0.,0.,0.)}, {AMREX_D_DECL(1.,1.,1.)});
+    nxtot = (x1 - x0) / spacing0;
+    nytot = (y1 - y0) / spacing0;
+    nztot = (z1 - z0) / spacing0;
+
     RealBox rb({AMREX_D_DECL(x0,y0,z0)}, {AMREX_D_DECL(x1,y1,z1)}); // EWQ
     Array<int,AMREX_SPACEDIM> is_periodic{AMREX_D_DECL(0,0,0)};
     Geometry::Setup(&rb, 0, is_periodic.data());
-//    Box domain0(IntVect{AMREX_D_DECL(0,0,0)}, IntVect{AMREX_D_DECL(n_cell-1,n_cell-1,n_cell-1)});
     // EWQ:
-    // is it a bad idea to use negative indices?
-    Box domain0
-    (
-        IntVect{AMREX_D_DECL(nxmin,nymin,nzmin)},
-        IntVect{AMREX_D_DECL(nxmax-1,nymax-1,nzmax-1)}
-        // cell-centered, by default
-    );
+    Box domain0(IntVect{AMREX_D_DECL(0,0,0)},
+                IntVect{AMREX_D_DECL(nxtot-1,nytot-1,nztot-1)});  // cell-centered, by default
     amrex::Print() << "domain0 : " << domain0 << "\n"; // domain0 : ((0,0,0) (127,127,127) (0,0,0))
 
     Box domain = domain0;

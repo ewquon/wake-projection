@@ -34,12 +34,12 @@ private:
 //    amrex::Real spacing = 0.1; // spacing at max_level, i.e., highest resolution (EWQ)
 
     int ref_ratio = 2;
-    int max_grid_size = 64;
+    int max_grid_size = 64; // largest size (along on dimension) for any chunk of the BoxArray
     
     // EWQ:
     amrex::Real x0,y0,z0,x1,y1,z1; // actual bounding box
-    amrex::Real xmin = -10.0; // target streamwise extent, in rotor radii R
-    amrex::Real xmax =  10.0; // target streamwise extent, in rotor radii R
+    amrex::Real xmin = -10.0; // upstream extent, in rotor radii R
+    amrex::Real xmax = 10.0; // downstream extent, in rotor radii R
     amrex::Real buffer = 10.0; // target lateral/vertical extent from rotor edge, in rotor radii R
     amrex::Real zhub = 1.5;
     bool ground_effect = false;

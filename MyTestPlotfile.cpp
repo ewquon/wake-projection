@@ -31,3 +31,41 @@ MyTest::writePlotfile () const
                             Vector<IntVect>(nlevels, IntVect{ref_ratio}));
 }
 
+void
+MyTest::writeFineLevelData () const
+{
+    const amrex::IntVect lower = geom[max_level].Domain().smallEnd();
+    const amrex::IntVect upper = geom[max_level].Domain().bigEnd();
+    const int Nx = upper[0] - lower[0] + 1;
+    const int Ny = upper[1] - lower[1] + 1;
+    const int Nz = upper[2] - lower[2] + 1;
+    const int N = Nx*Ny*Nz;
+    amrex::Vector<double> solnvec(N);
+
+    // Get solution at all cell centers (i,j,k)
+    for (MFIter mfi(solution[max_level], TilingIfNotGPU()); mfi.isValid(); ++mfi)
+    {
+        // Get current box chunk
+        const Box& bx = mfi.tilebox();
+        auto solnfab = solution[max_level].array(mfi);
+        amrex::Dim3 lo = lbound(bx);
+        amrex::Dim3 hi = ubound(bx);
+
+        for (int k = lo.z; k <= hi.z; ++k)
+        {
+            for (int j = lo.y; j <= hi.y; ++j)
+            {
+                for (int i = lo.x; i <= hi.x; ++i)
+                {
+                    solnvec[(k-lower[2])*(Nx*Ny) + (j-lower[1])*Nx + i-lower[0]] = solnfab(i,j,k);
+                }
+            }
+        }
+    }
+
+    // now write the whole vector at once
+    std::ofstream f(output, std::ios::binary | std::ios::out);
+    f.write(reinterpret_cast<char*>(&solnvec[0]), N*sizeof(double));
+    f.close();
+    amrex::Print() << "Wrote output to " << output << "\n";
+}

@@ -132,6 +132,7 @@ MyTest::readParameters ()
     pp.query("zhub", zhub);
     pp.query("ground_effect", ground_effect);
     pp.query("rhs_prefix", rhs_prefix);
+    pp.query("output", output);
 
     pp.query("composite_solve", composite_solve);
 

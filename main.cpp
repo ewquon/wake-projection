@@ -11,6 +11,7 @@ int main (int argc, char* argv[])
         MyTest mytest;
         mytest.solve();
         mytest.writePlotfile();
+        mytest.writeFineLevelData();
     }
 
     amrex::Finalize();

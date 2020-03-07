@@ -15,6 +15,7 @@ public:
 
     void solve ();
     void writePlotfile () const;
+    void writeFineLevelData () const;
 
 public: // make these public for cuda
     void initProbPoisson ();
@@ -44,6 +45,7 @@ private:
     amrex::Real zhub = 1.5;
     bool ground_effect = false;
     std::string rhs_prefix = "level"; 
+    std::string output = "field.dat"; 
     
     bool composite_solve = true;
 

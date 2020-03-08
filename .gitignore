@@ -1,0 +1,10 @@
+.gitignore
+
+tmp_build_dir
+main3d.*
+
+inputs*
+
+log*
+plot*
+Backtrace.*
